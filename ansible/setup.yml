@@ -1,0 +1,39 @@
+---
+- name: Setup Supervision Portal Environment
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    venv_path: "{{ playbook_dir }}/../venv"
+    python_packages:
+      - fastapi
+      - uvicorn
+      - pydantic
+      - requests
+      - robotframework
+      - robotframework-seleniumlibrary
+
+  tasks:
+    - name: Ensure python3-venv and pip are installed
+      ansible.builtin.apt:
+        name:
+          - python3-pip
+          - python3-venv
+        state: present
+      become: true # Donne les droits administrateur (sudo) à cette tâche
+
+    - name: Ensure backend and tests directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ playbook_dir }}/../backend"
+        - "{{ playbook_dir }}/../tests"
+
+    - name: Install required Python packages in a virtual environment
+      ansible.builtin.pip:
+        name: "{{ python_packages }}"
+        virtualenv: "{{ venv_path }}"
+        virtualenv_command: python3 -m venv
